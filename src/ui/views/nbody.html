@@ -26,13 +26,13 @@
             configs.n_bodies = 3;
             configs.n_timesteps = 1000;
             configs.radius = 1;
-			
+
             $(document).ready(function(){
 				var controls;
 				var camera;
 				var scene;
 				var renderer;
-                
+
                 Papa.parse(configs.filename, {
                     download: true,
                     dynamicTyping: true,
@@ -61,11 +61,22 @@
                     for (var i = 0; i < configs.n_bodies; i++)
                     {
                         var geometry = new THREE.SphereGeometry(configs.radius, 32, 32);
-                        var material = new THREE.MeshBasicMaterial({color: 0x460335});
+                        var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
                         var sphere = new THREE.Mesh(geometry, material);
                         sphere.position.x += data[i][0];
                         sphere.position.x += data[i][1];
                         sphere.position.x += data[i][2];
+
+						var spriteMaterial = new THREE.SpriteMaterial(
+						{
+							map: new THREE.ImageUtils.loadTexture( '/images/glow.png' ),
+							useScreenCoordinates: false,
+							color: 0x00ff00, transparent: false, blending: THREE.AdditiveBlending
+						});
+						var sprite = new THREE.Sprite( spriteMaterial );
+						sprite.scale.set(5, 5, 1.0);
+						sphere.add(sprite);
+
                         scene.add(sphere);
                         objects.push(sphere);
                     }
@@ -74,6 +85,7 @@
 					var step = 2;
 
 					var gridHelper = new THREE.GridHelper( size, step );
+					gridHelper.setColors(new THREE.Color(0x333333), new THREE.Color(0x333333));
 					scene.add( gridHelper );
 
     				renderer.render(scene, camera);
