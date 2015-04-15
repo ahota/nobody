@@ -1,3 +1,5 @@
-# N body simulation with CUDA
+# 3D N-body simulation with CUDA and ThreeJS
 
-yay
+Dependencies
+---
+Flask: `pip install flask`
