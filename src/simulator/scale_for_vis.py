@@ -1,7 +1,7 @@
 import sys
 import csv
 
-MAX = 100000
+MAX = 100
 results = []
 with open(sys.argv[1], 'r') as f:
     f.readline() # pass over configs
