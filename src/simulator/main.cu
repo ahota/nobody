@@ -73,8 +73,9 @@ int main(int argc, char **argv) {
     time(&raw_time);
     current_time = localtime(&raw_time);
     char *filename = (char *)malloc(64);
-    sprintf(filename, "%2d%2d%2d_%2d%2d%2d.nbd", current_time->tm_year,
-            current_time->tm_mon, current_time->tm_mday, current_time->tm_hour,
+    sprintf(filename, "%02d%02d%02d_%02d%02d%02d.nbd", 
+            current_time->tm_year%100, current_time->tm_mon,
+            current_time->tm_mday, current_time->tm_hour,
             current_time->tm_min, current_time->tm_sec);
 
     printf("Saving to %s...\n", filename);
@@ -177,7 +178,7 @@ __device__ void force_kernel(float4 *body_i, float4 *body_j, float3 *acc_i) {
     //cube and sqrt to get (r^2 + epsilon^2)^(3/2)
     denominator = sqrt( denominator * denominator * denominator );
 
-    float acc = G * body_j->w / denominator;
+    float acc = body_j->w / denominator;
 
     //update acceleration
     acc_i->x += acc * d.x;
