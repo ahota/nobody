@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
     int block_size = (NUM_BODIES < 16) ? 4 : (NUM_BODIES < 256) ? 16 : 32;
     int grid_size  = NUM_BODIES / block_size;
-    int mem_size = block_size * sizeof(float3);
+    int mem_size = (block_size+1) * sizeof(float4);
     printf("  KERNEL SETTINGS:\n");
     printf("    bodies  = %d\n", NUM_BODIES);
     printf("    tile size = %d\n", block_size);
@@ -178,7 +178,7 @@ __device__ void force_kernel(float4 *body_i, float4 *body_j, float3 *acc_i) {
     //cube and sqrt to get (r^2 + epsilon^2)^(3/2)
     denominator = sqrt( denominator * denominator * denominator );
 
-    float acc = body_j->w / denominator;
+    float acc = G * body_j->w / denominator;
 
     //update acceleration
     acc_i->x += acc * d.x;
