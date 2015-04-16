@@ -8,16 +8,16 @@
 
 #define CMAX       1496         //+-1 AU * 10e-5
 #define CMIN      -1496
-#define MMAX       1.898e22     //mass of Jupiter * 10e-5
-#define MMIN       328.5e16     //mass of Mercury * 10e-5
+#define MMAX       1.898e22f    //mass of Jupiter * 10e-5
+#define MMIN       328.5e16f    //mass of Mercury * 10e-5
 #define AMAX       1000
 #define AMIN      -1000
 #define VC         299792458    //speed of light
 
-#define EPSILON2   0.5          //softener used to prevent r^2 -> 0
+#define EPSILON2   0.5f         //softener used to prevent r^2 -> 0
 
-#define NUM_BODIES 4
-#define G          6.673e-11    //gravitational constant
+#define NUM_BODIES 16
+#define G          6.673e-11f   //gravitational constant
 #define TIMESTEP   1
 #define NUM_STEPS  100
 

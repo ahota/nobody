@@ -48,9 +48,13 @@ int main(int argc, char **argv) {
 
 	printf("Running kernel...\n");
 
-    int block_size = 4;
+    int block_size = (NUM_BODIES < 16) ? 4 : (NUM_BODIES < 256) ? 16 : 32;
     int grid_size  = NUM_BODIES / block_size;
     int mem_size = block_size * sizeof(float3);
+    printf("  KERNEL SETTINGS:\n");
+    printf("    bodies  = %d\n", NUM_BODIES);
+    printf("    tile size = %d\n", block_size);
+    printf("    grid size = %d\n", grid_size);
     for(i = 0; i < NUM_STEPS; i++) {
         main_nbody_kernel<<<grid_size, block_size, mem_size>>>(dev_pos_mass,
                 dev_acc, dev_output, i);
