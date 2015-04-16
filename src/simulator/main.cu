@@ -5,67 +5,64 @@ int main(int argc, char **argv) {
 
 	printf("Creating bodies...\n");
 
-	fdim3 *host_position, *device_position;
-	fdim3 *host_velocity, *device_velocity;
-	float *host_mass, *device_mass;
-    fdim3 *host_output, *device_output;
+    float4 *host_pos_mass, *dev_pos_mass;
+    float3 *host_acc, *dev_acc;
+    float3 *host_output, *dev_output;
 
 	printf("Allocating host memory...\n");
 
-	host_position = (fdim3 *)malloc(NUM_BODIES * sizeof(fdim3));
-	host_velocity = (fdim3 *)malloc(NUM_BODIES * sizeof(fdim3));
-	host_mass     = (float *)malloc(NUM_BODIES * sizeof(float));
-	host_output   = (fdim3 *)malloc(NUM_BODIES * NUM_STEPS * sizeof(fdim3));
+    host_pos_mass = (float4 *)malloc(NUM_BODIES * sizeof(float4));
+    host_acc      = (float3 *)malloc(NUM_BODIES * sizeof(float3));
+	host_output   = (float3 *)malloc(NUM_BODIES * NUM_STEPS * sizeof(float3));
 
 	printf("Allocating device memory...\n");
 
-	cudaMalloc((void **)&device_position, NUM_BODIES * sizeof(fdim3));
-	cudaMalloc((void **)&device_velocity, NUM_BODIES * sizeof(fdim3));
-	cudaMalloc((void **)&device_mass,     NUM_BODIES * sizeof(float));
-    cudaMalloc((void **)&device_output, NUM_BODIES * NUM_STEPS * sizeof(fdim3));
+	cudaMalloc((void **)&dev_pos_mass, NUM_BODIES * sizeof(float4));
+    cudaMalloc((void **)&dev_acc, NUM_BODIES * sizeof(float3));
+    cudaMalloc((void **)&dev_output, NUM_BODIES * NUM_STEPS * sizeof(float3));
 
 	printf("Initializing bodies...\n");
 
 	int i;
 	for(i = 0; i < NUM_BODIES; i++) {
-		host_position[i].x = rand_coordinate() * (i + 1);
-		host_position[i].y = rand_coordinate() * (i + 1);
-		host_position[i].z = rand_coordinate() * (i + 1);
-		host_velocity[i].x = rand_velocity()   * (i + 1);
-		host_velocity[i].y = rand_velocity()   * (i + 1);
-		host_velocity[i].z = rand_velocity()   * (i + 1);
-		host_mass[i]       = rand_mass() * (i + 1);
+        host_pos_mass[i].x = rand_coordinate();
+        host_pos_mass[i].y = rand_coordinate();
+        host_pos_mass[i].z = rand_coordinate();
+        host_pos_mass[i].w = rand_mass();
 	}
-    for(i = 0; i < NUM_BODIES * NUM_STEPS; i++) {
-        host_output[i].x = 0; host_output[i].y = 0; host_output[i].z = 0;
+
+    printf("Initial positions and masses:\n");
+    for(i = 0; i < NUM_BODIES; i++) {
+        printf("%d:\t%f\t%f\t%f\n", i, host_pos_mass[i].x, host_pos_mass[i].y,
+                host_pos_mass[i].z, host_pos_mass[i].w);
     }
 
 	printf("Copying to device...\n");
 
-	cudaMemcpy(device_position, host_position, NUM_BODIES * sizeof(fdim3),
+	cudaMemcpy(dev_pos_mass, host_pos_mass, NUM_BODIES * sizeof(float3),
 					cudaMemcpyHostToDevice);
-	cudaMemcpy(device_velocity, host_velocity, NUM_BODIES * sizeof(fdim3),
+	cudaMemcpy(dev_acc, host_acc, NUM_BODIES * sizeof(float3),
 					cudaMemcpyHostToDevice);
-	cudaMemcpy(device_mass, host_mass, NUM_BODIES * sizeof(float),
-					cudaMemcpyHostToDevice);
-    cudaMemcpy(device_output, host_output, 
-            NUM_BODIES * NUM_STEPS * sizeof(fdim3), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_output, host_output, NUM_BODIES * NUM_STEPS * sizeof(float3),
+                    cudaMemcpyHostToDevice);
 
 	printf("Running kernel...\n");
 
-	printf("\t%d iterations\n", NUM_STEPS);
-    nbody_kernel<<<1, NUM_BODIES>>>(device_position, device_velocity,
-                    device_mass, NUM_BODIES, G, TIMESTEP, NUM_STEPS,
-                    device_output);
+    int block_size = 4;
+    int grid_size  = NUM_BODIES / block_size;
+    int mem_size = block_size * sizeof(float3);
+    for(i = 0; i < NUM_STEPS; i++) {
+        main_nbody_kernel<<<grid_size, block_size, mem_size>>>(dev_pos_mass,
+                dev_acc, dev_output, i);
+    }
 
     printf("Copying to host...\n");
 
-    cudaMemcpy(host_output, device_output, 
-            NUM_BODIES * NUM_STEPS * sizeof(fdim3), cudaMemcpyDeviceToHost);
-    cudaFree(device_position);
-    cudaFree(device_velocity);
-    cudaFree(device_mass);
-    cudaFree(device_output);
+    cudaMemcpy(host_output, dev_output, NUM_BODIES * NUM_STEPS * sizeof(float3),
+                    cudaMemcpyDeviceToHost);
+    cudaFree(dev_pos_mass);
+    cudaFree(dev_acc);
+    cudaFree(dev_output);
 
     time_t raw_time;
     struct tm *current_time;
@@ -82,7 +79,8 @@ int main(int argc, char **argv) {
     if(outfile == NULL)
         fprintf(stderr, "Error opening file\n");
     else {
-        fprintf(outfile, "%d %d\n", NUM_BODIES, NUM_STEPS);
+        //printf("%f\n", host_output[0].x);
+        fprintf(outfile, "%d,%d\n", NUM_BODIES, NUM_STEPS);
         for(i = 0; i < NUM_BODIES * NUM_STEPS; i++) {
             fprintf(outfile, "%f,%f,%f\n", host_output[i].x, host_output[i].y,
                     host_output[i].z);
@@ -98,55 +96,84 @@ float rand_coordinate() {
     return ((float)rand() / (float)RAND_MAX) * (CMAX - CMIN) + CMIN;
 }
 
-float rand_velocity() {
-    return ((float)rand() / (float)RAND_MAX) * (VMAX - VMIN) + VMIN;
+float rand_acceleration() {
+    return ((float)rand() / (float)RAND_MAX) * (AMAX - AMIN) + AMIN;
 }
 
 float rand_mass() { 
     return ((float)rand() / (float)RAND_MAX) * (MMAX - MMIN) + MMIN;
 }
 
-__global__ void nbody_kernel(fdim3 *pos, fdim3 *vel, float *mass, int num_body, 
-        float gravity, float timestep, int num_steps, fdim3 *out_position) {
-    int id = threadIdx.x;
-    //optimizations:
-    //  - use __shared__ array of pos and mass for faster access
-    //    - this leaves room in shared memory for about 1024 bodies
-    extern __shared__ fdim3 positions[];
-    extern __shared__ float masses[];
+__global__ void main_nbody_kernel(float4 *dev_pos_mass, float3 *dev_acc,
+        float3 *dev_output, int cur_step) {
+    //index into global arrays for this thread's body
+    int global_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-    //Fill shared arrays
-    positions[id] = pos[id];
-    masses[id]    = mass[id];
-    fdim3 d, a;
-    fdim3 my_vel = vel[id];
-    fdim3 my_pos = positions[id];
-    
-    int i, t;
-    for(t = 0; t < num_steps; t++) {
-        for(i = 0; i < num_body; i++) {
-            //This causes divergence
-            if(i != id) {
-                //distances
-                d.x = my_pos.x - positions[i].x;
-                d.y = my_pos.y - positions[i].y;
-                d.z = my_pos.z - positions[i].z;
-                //accelerations
-                a.x = (masses[i] * gravity) / (d.x * d.x);
-                a.y = (masses[i] * gravity) / (d.y * d.y);
-                a.z = (masses[i] * gravity) / (d.z * d.z);
-                //update velocities
-                my_vel.x += a.x * timestep;
-                my_vel.y += a.y * timestep;
-                my_vel.z += a.z * timestep;
-            }
-        }
-        my_pos.x += my_vel.x;
-        my_pos.y += my_vel.y;
-        my_pos.z += my_vel.z;
-        positions[id] = my_pos;
-        out_position[t * num_body + id].x = my_pos.x;
-        out_position[t * num_body + id].y = my_pos.y;
-        out_position[t * num_body + id].z = my_pos.z;
+    //local copies of this body's position, mass, and acceleration
+    float4 my_pos_mass = dev_pos_mass[global_id];
+    float3 my_acc = dev_acc[global_id];
+
+    //copy of position and mass for bodies in the current tile
+    extern __shared__ float4 tile_pos_mass[]; 
+
+    //iterate over all tiles and update position and acceleration
+    //each iteration loads one tile's worth of data from global memory
+    //these reads should be coalesced
+    int i, tile;
+    for(i = 0, tile = 0; i < NUM_BODIES; i += blockDim.x, tile++) {
+        //index into global for this thread's body *for this tile*
+        int tile_id = tile * blockDim.x + threadIdx.x;
+
+        //threads collaborate to load from global for this tile
+        tile_pos_mass[threadIdx.x] = dev_pos_mass[tile_id];
+        __syncthreads();
+
+        //update acceleration for this thread's body for this tile
+        tile_nbody_kernel(&my_pos_mass, &my_acc);
+        __syncthreads();
     }
+
+    //update position for this body
+    my_pos_mass.x += my_acc.x;
+    my_pos_mass.y += my_acc.y;
+    my_pos_mass.z += my_acc.z;
+
+    //update global output
+    dev_output[cur_step * NUM_BODIES + global_id].x = my_pos_mass.x;
+    dev_output[cur_step * NUM_BODIES + global_id].y = my_pos_mass.y;
+    dev_output[cur_step * NUM_BODIES + global_id].z = my_pos_mass.z;
+}
+
+__device__ void tile_nbody_kernel(float4 *my_pos_mass, float3 *my_acc) {
+    //tile position array from the outer kernel
+    //pre-loaded with this tile's positions and masses
+    extern __shared__ float4 tile_pos_mass[];
+
+    //iterate over each body in the tile and calculate its effect on
+    //this thread's body
+    int i;
+    for(i = 0; i < blockDim.x; i++) {
+        force_kernel(my_pos_mass, &tile_pos_mass[i], my_acc);
+    }
+}
+
+__device__ void force_kernel(float4 *body_i, float4 *body_j, float3 *acc_i) {
+    //calculate distance components
+    float3 d;
+    d.x = body_i->x - body_j->x;
+    d.y = body_i->y - body_j->y;
+    d.z = body_i->z - body_j->z;
+
+    //use episilon softener
+    //  r^2 + epsilon^2
+    float denominator = d.x * d.x + d.y * d.y + d.z * d.z + EPSILON2;
+    //cube and sqrt to get (r^2 + epsilon^2)^(3/2)
+    denominator = sqrt( denominator * denominator * denominator );
+
+    float acc = G * body_j->w / denominator;
+
+    //update acceleration
+    acc_i->x += acc * d.x;
+    acc_i->y += acc * d.y;
+    acc_i->z += acc * d.z;
 }
