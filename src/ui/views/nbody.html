@@ -46,13 +46,15 @@
             var timestep = 0;
             var objects = [];
             var glows = [];
+            var pause = false;
 
             configs = {};
             configs.filename = "/data/simulation.csv";
-            configs.n_bodies = 512;
-            configs.n_timesteps = 5000;
+            configs.n_bodies = 1024;
+            configs.n_timesteps = 2500;
             configs.radius = 3.5;
             configs.speed = 25;
+            configs.color = 0x00ff00;
 
             $(document).ready(function(){
 				var controls;
@@ -95,7 +97,7 @@
                         { 
                             "c":   { type: "f", value: 0.0 },
                             "p":   { type: "f", value: 60.0 },
-                            glowColor: { type: "c", value: new THREE.Color(0xffff00) },
+                            glowColor: { type: "c", value: new THREE.Color(configs.color) },
                             viewVector: { type: "v3", value: camera.position }
                         },
                         vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
@@ -143,8 +145,11 @@
 
                     timestep = 0;
                     setInterval(function(){
-                        controls.update();
-                        render(timestep++);
+                        if (!pause)
+                        {
+                            controls.update();
+                            render(timestep++);
+                        }
                     }, configs.speed);
 				}
 
@@ -170,6 +175,14 @@
                     update_positions(timestep);
 					renderer.render(scene, camera);
 				}
+
+                $(window).keypress(function(e){
+                    var key = e.which;
+                    if (key == 112)
+                    {
+                        pause = !pause;                   
+                    }                   
+                });
 			});
 		</script>
 	</head>
