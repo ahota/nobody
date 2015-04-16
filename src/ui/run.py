@@ -9,6 +9,10 @@ def send_js(path):
 def send_data(path):
     return send_from_directory('data', path)
 
+@app.route("/images/<path:path>")
+def send_images(path):
+    return send_from_directory('images', path)
+
 @app.route("/")
 def index():
     return render_template('nbody.html')
