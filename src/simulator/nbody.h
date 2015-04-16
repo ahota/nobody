@@ -16,10 +16,10 @@
 
 #define EPSILON2   0.5f         //softener used to prevent r^2 -> 0
 
-#define NUM_BODIES 16
+#define NUM_BODIES 500
 #define G          6.673e-11f   //gravitational constant
 #define TIMESTEP   1
-#define NUM_STEPS  100
+#define NUM_STEPS  200
 
 float rand_acceleration();
 float rand_coordinate();
