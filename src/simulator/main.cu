@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     time(&raw_time);
     current_time = localtime(&raw_time);
     char *filename = (char *)malloc(64);
-    sprintf(filename, "%d%d%d_%d%d%d.nbd", current_time->tm_year,
+    sprintf(filename, "%2d%2d%2d_%2d%2d%2d.nbd", current_time->tm_year,
             current_time->tm_mon, current_time->tm_mday, current_time->tm_hour,
             current_time->tm_min, current_time->tm_sec);
 
@@ -141,6 +141,9 @@ __global__ void main_nbody_kernel(float4 *dev_pos_mass, float3 *dev_acc,
     my_pos_mass.x += my_acc.x;
     my_pos_mass.y += my_acc.y;
     my_pos_mass.z += my_acc.z;
+
+    //update global position array
+    dev_pos_mass[global_id] = my_pos_mass;
 
     //update global output
     dev_output[cur_step * NUM_BODIES + global_id].x = my_pos_mass.x;
