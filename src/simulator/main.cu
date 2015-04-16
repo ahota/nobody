@@ -145,6 +145,7 @@ __global__ void main_nbody_kernel(float4 *dev_pos_mass, float3 *dev_acc,
 
     //update global position array
     dev_pos_mass[global_id] = my_pos_mass;
+	dev_acc[global_id] = my_acc;
 
     //update global output
     dev_output[cur_step * NUM_BODIES + global_id].x = my_pos_mass.x;
@@ -168,9 +169,9 @@ __device__ void tile_nbody_kernel(float4 *my_pos_mass, float3 *my_acc) {
 __device__ void force_kernel(float4 *body_i, float4 *body_j, float3 *acc_i) {
     //calculate distance components
     float3 d;
-    d.x = body_i->x - body_j->x;
-    d.y = body_i->y - body_j->y;
-    d.z = body_i->z - body_j->z;
+    d.x = body_j->x - body_i->x;
+    d.y = body_j->y - body_i->y;
+    d.z = body_j->z - body_i->z;
 
     //use episilon softener
     //  r^2 + epsilon^2

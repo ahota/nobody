@@ -8,18 +8,18 @@
 
 #define CMAX       1496         //+-1 AU * 10e-5
 #define CMIN      -1496
-#define MMAX       9e20         //approximately mass of Ceres
-#define MMIN       14e10        //approximately mass of Bennu
+#define MMAX       9e2         //approximately mass of Ceres
+#define MMIN       14e1         //approximately mass of Bennu
 #define AMAX       1000
 #define AMIN      -1000
 #define VC         299792458    //speed of light
 
 #define EPSILON2   0.5f         //softener used to prevent r^2 -> 0
 
-#define NUM_BODIES 500
-#define G          6.673e-11f   //gravitational constant
+#define NUM_BODIES 256
+#define G          1.0f//6.673e-11f   //gravitational constant
 #define TIMESTEP   1
-#define NUM_STEPS  200
+#define NUM_STEPS  10000
 
 float rand_acceleration();
 float rand_coordinate();
