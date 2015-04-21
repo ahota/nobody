@@ -182,7 +182,7 @@ __device__ void force_kernel(float4 *body_i, float4 *body_j, float3 *acc_i) {
     float acc = G * body_j->w / denominator;
 
     //update acceleration
-    acc_i->x += acc * d.x;
-    acc_i->y += acc * d.y;
-    acc_i->z += acc * d.z;
+    acc_i->x += acc * d.x * TIMESTEP;
+    acc_i->y += acc * d.y * TIMESTEP;
+    acc_i->z += acc * d.z * TIMESTEP;
 }

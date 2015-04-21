@@ -18,7 +18,7 @@
 
 #define NUM_BODIES 256
 #define G          1.0f//6.673e-11f   //gravitational constant
-#define TIMESTEP   1
+#define TIMESTEP   0.1f
 #define NUM_STEPS  10000
 
 float rand_acceleration();
