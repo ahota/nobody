@@ -46,17 +46,23 @@
             var timestep = 0;
             var objects = [];
             var glows = [];
+            var pause = false;
+            var autopilot = false;
 
             configs = {};
             configs.filename = "/data/simulation.csv";
-            configs.n_bodies = 512;
-            configs.n_timesteps = 5000;
+            configs.n_bodies = 1024;
+            configs.n_timesteps = 2500;
             configs.radius = 3.5;
             configs.speed = 25;
+            configs.camera_speed = 0.05;
+            configs.color = 0x00ff00;
 
             $(document).ready(function(){
 				var controls;
 				var camera;
+                var camera_angle = 45;
+                var far = 300;
 				var scene;
 				var renderer;
 
@@ -78,7 +84,8 @@
 					renderer.setClearColor( 0x000000, 1);
 				    document.body.appendChild(renderer.domElement);
 				    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-				    camera.position.set(0, 0, 200);
+
+                    camera.position.set(far * Math.cos(camera_angle * Math.PI / 180.0), far * Math.sin(45 * Math.PI / 180.0), far * Math.sin(camera_angle * Math.PI / 180.0));
 				    camera.lookAt(new THREE.Vector3(0, 0, 0));
 				    scene = new THREE.Scene();
 
@@ -87,7 +94,6 @@
 
                     var texture = new THREE.ImageUtils.loadTexture( '/images/glow.png' );
                     var geometry = new THREE.SphereGeometry(configs.radius, 32, 32);
-                    var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 
                     var customMaterial = new THREE.ShaderMaterial( 
                     {
@@ -95,7 +101,7 @@
                         { 
                             "c":   { type: "f", value: 0.0 },
                             "p":   { type: "f", value: 60.0 },
-                            glowColor: { type: "c", value: new THREE.Color(0xffff00) },
+                            glowColor: { type: "c", value: new THREE.Color(configs.color) },
                             viewVector: { type: "v3", value: camera.position }
                         },
                         vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
@@ -112,22 +118,6 @@
                         sphere.position.x += data[i][1];
                         sphere.position.x += data[i][2];
 
-						/*var spriteMaterial = new THREE.SpriteMaterial(
-						{
-							map: texture,
-							useScreenCoordinates: false,
-							color: 0x00ff00, transparent: true, blending: THREE.AdditiveBlending
-						});
-						var sprite = new THREE.Sprite( spriteMaterial );
-						sprite.scale.set(2, 2,  0.9);
-						sphere.add(sprite);*/
-
-                        //var glow = new THREE.Mesh(geometry, customMaterial);
-                        //glow.position = sphere.position;
-                        //glow.scale.multiplyScalar(5);
-                        //scene.add(glow);
-                        //glows.push(glow);
-
                         scene.add(sphere);
                         objects.push(sphere);
                     }
@@ -138,13 +128,16 @@
 					var gridHelper = new THREE.GridHelper( size, step );
 					gridHelper.setColors(new THREE.Color(0x333333), new THREE.Color(0x333333));
 					scene.add( gridHelper );
-
+                    
     				renderer.render(scene, camera);
 
                     timestep = 0;
                     setInterval(function(){
-                        controls.update();
-                        render(timestep++);
+                        if (!pause)
+                        {
+                            controls.update();
+                            render(timestep++);
+                        }
                     }, configs.speed);
 				}
 
@@ -158,10 +151,13 @@
                             objects[i].position.x = data[configs.n_bodies * timestep + i][0];
                             objects[i].position.y = data[configs.n_bodies * timestep + i][1];
                             objects[i].position.z = data[configs.n_bodies * timestep + i][2];
-                            //glows[i].position.x = objects[i].position.x;
-                            //glows[i].position.y = objects[i].position.y;
-                            //glows[i].position.z = objects[i].position.z;
                         }
+                    }
+                    
+                    if (autopilot)
+                    {
+                        camera.position.set(far * Math.cos(camera_angle * Math.PI / 180.0), far * Math.sin(camera_angle * Math.PI / 180.0), far * Math.sin(camera_angle * Math.PI / 180.0));
+                        camera_angle = (camera_angle + configs.camera_speed) % 360;
                     }
                 }
 
@@ -170,6 +166,18 @@
                     update_positions(timestep);
 					renderer.render(scene, camera);
 				}
+
+                $(window).keypress(function(e){
+                    var key = e.which;
+                    if (key == 112) // p key
+                    {
+                        pause = !pause;                   
+                    }                   
+                    else if (key == 97) // a key
+                    {
+                        autopilot = !autopilot;
+                    }
+                });
 			});
 		</script>
 	</head>
