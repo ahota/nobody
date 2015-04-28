@@ -60,13 +60,29 @@
 		\label{scr}
 	\end{figure}
 	
-	\section{Tests}
 	\section{Evaluation}
-	\section{Conclusion}
+	We tested our implementations on a machine with four Xeon CPUs and an Nvidia Quadro FX3800 GPU with 192 cores. 
+	
+	For evaluation, the runtime of the serial and parallel implementations are compared. The values used for the number of particles in this comparison were 64, 128, 256, 512 and 1024. The implementations created a simulation file for 10000 timesteps. The large number of timesteps simulated, provides a flexible way to increase or decrease the speed of the visualization if needed. The results are shown in \textbf{Figure [?]}.
 	
 	\pagebreak
 	
-	\section{Appendix A: Header file}
+	\section{Appendix A: Installation}
+		The code for our work is available at http://github.com/ahota/nobody and can be downloaded using Git by running: \texttt{git clone http://github.com/ahota/nobody}.
+		
+		\subsection{Dependencies}
+		For running the simulation, the only dependency is a machine with an Nvidia GPU that supports CUDA. For running the web interface, Python's Flask micro-framework needs to be installed to be able to serve the simulation interface as a web server. You can install Flask by running \texttt{sudo pip install flask}. 
+		
+		\subsection{Compiling}
+		The serial and the parallel implementations can be compiled by running \texttt{./src/simulator/compile.sh}. 
+		
+		\subsection{Running the simulation}
+		For the serial version, run \texttt{./src/simulator/nbody\_cpu}.
+		The parallel version can be executed by running \texttt{./src/simulator/nbody\_cuda}.
+		
+		The parallel version provides an \texttt{nbd} file that can be fed into a script as input to make it ready for visualization. This can be done by running \texttt{python scale\_for\_vis.py <filename>}, where filename is the name of the file made by running the simulation. This script creates a simulation.csv file that has to be copied to \texttt{./ui/data/} for the web server to pick up. The python web server starts and serves at \texttt{localhost:5000} by running \texttt{python run.py} in \texttt{./src/ui/}. From now on, any web browser can view the simulation on http://localhost:5000.
+		
+	\section{Appendix B: Header file}
 	\begin{lstlisting}[language=c]
 	#include<stdio.h>
 	#include<stdlib.h>
