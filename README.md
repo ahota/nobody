@@ -8,5 +8,5 @@ The documentations for the 3D N-body simulator and a CUDA matrix multiplier can 
 
 Running example
 ---
-A running sample of the 3D N-body simulation for 512 bodies and 500 timesteps can be found at http://web.eecs.utk.edu/~mahmadza/
+A running sample of the 3D N-body simulation for 512 bodies and 500 timesteps can be found at http://web.eecs.utk.edu/~mahmadza/nbody
 
