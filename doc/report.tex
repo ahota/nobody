@@ -6,7 +6,9 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{listings}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 
@@ -14,7 +16,8 @@
 \lstset{
 	frame=single,
 	breaklines=true,
-	postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}
+	postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},
+	basicstyle=\ttfamily\footnotesize
 	}
 	\lstdefinelanguage{numpy}{
 		keywords = {
@@ -36,10 +39,29 @@
 	\maketitle
 	
 	\section{Introduction}
-	N-body simulation, is a simulation of the effects of physical forces between particles in a dynamical system, and is used in many areas such as: astronomy, physics, chemistry, etc. The simulation is very time consuming due to the large number of particles and the need to calculate the force between all combinations. 
+	N-body simulation is a simulation of the effects of physical forces between particles in a dynamical system, and is used in many areas such as astronomy, physics, and chemistry. The simulation is very time consuming due to the large number of particles and the need to calculate the force between all pairs. 
 	
-	In this work, we implement a serial and a parallel version of the simulation to show the effectiveness of GPU parallelization for the problem and also provide an interactive web interface for viewing the simulation results. Our simulation is tested with a maximum number of 1024 particles for 10000 timesteps. 
+	In this work, we implement a serial and a parallel version of the simulation to show the effectiveness of GPU parallelization for the problem and also provide an interactive web interface for viewing the simulation results. Our simulation is tested with a maximum number of 1024 particles for 10,000 time steps. 
+	
 	\section{Method}
+	Our parallel implementation was designed with two general guidelines:
+	\begin{description}
+		\item[1:1 Ratio] | Each thread or GPU core is assigned a single body or particle in the simulation for which it will calculate forces against all other pairs.
+		\item[Tiling] | Utilize memory tiling so that threads in a block can coordinate memory accesses. This increases performance by making coalescing read operations.
+	\end{description}
+	Thread block size is determined at runtime based on the number of bodies. Each thread in these blocks will coordinate to read one memory location from the next \texttt{TILE\_SIZE} section of the global position array. By synchronizing along these reads, we coalesce the memory access, allowing for high burst speeds.
+	
+	An additional improvement made was the use of a softening value, $\varepsilon$. This is done to prevent divergence in the kernel. Since each GPU core operates in lock-step with each other core in its warp, the highest performance is achieved when all threads follow the same execution path. However, conditional statements, such as an \texttt{if} block, cause divergence in the kernel. Some threads may follow the \texttt{true} execution path, while others follow the \texttt{false} path. To make sure all threads execute the correct code, both paths are executed in a warp. This can severely hinder performance, and presents an issue when calculating force between all pairs of bodies.
+	
+	The formula for calculating gravitational force between two bodies is shown below:
+	\begin{equation}
+	F_g = G\frac{m_1 m_2}{r^2}
+	\end{equation}
+	where $G$ is the universal gravitational constant, $m_1$ and $m_2$ are the masses of two bodies, and $r$ is the distance between their centers. Since we are comparing all pairs of bodies, this includes the calculation of force between a body and itself. This leads to a division by 0, since $r = 0$. In a serial implementation, this can be avoided with a simple \texttt{if} statement. However in parallel, to avoid divergence caused by a similar \texttt{if} statement, we use a modified formula using our $\varepsilon$ softening value:
+	\begin{equation}
+	F_g = G\frac{m_1 m_2}{r^2 + \varepsilon^2}
+	\end{equation}
+	where $0 < \varepsilon \ll 1$. This makes the calculation an approximation, however with sufficiently low values of $\varepsilon$, this approximation is acceptable.
 	
 	\section{User Interface}
 	To view the simulation results, we created a web interface that receives the simulation results as a \textbf{csv} file and renders it as a simulation in a 3D environment using ThreeJS - the WebGL based library.
@@ -62,8 +84,22 @@
 	\section{Evaluation}
 	We tested our implementations on a machine with four Xeon CPUs and an Nvidia Quadro FX3800 GPU with 192 cores. 
 	
-	For evaluation, the runtime of the serial and parallel implementations are compared. The values used for the number of particles in this comparison were 64, 128, 256, 512 and 1024. The implementations created a simulation file for 10000 timesteps. The large number of timesteps simulated, provides a flexible way to increase or decrease the speed of the visualization if needed. The results are shown in \textbf{Figure [?]}.
-	
+	For evaluation, the runtime of the serial and parallel implementations are compared. The values used for the number of particles in this comparison were 64, 128, 256, 512 and 1024. The implementations created a simulation file for 10000 timesteps. The large number of timesteps simulated, provides a flexible way to increase or decrease the speed of the visualization if needed. The results are shown in Figure \ref{perf}.
+	\begin{figure}
+		\centering
+		\begin{subfigure}[b]{0.45\textwidth}
+			\includegraphics[width=\textwidth]{nbody_cuda.png}
+			\caption{Performance results for our parallel CUDA implementation}
+			\label{nbody_cuda}
+		\end{subfigure}
+		\begin{subfigure}[b]{0.45\textwidth}
+			\includegraphics[width=\textwidth]{nbody_cpu.png}
+			\caption{Performance results for our parallel CUDA implementation}
+			\label{nbody_cpu}
+		\end{subfigure}
+		\caption{Performance comparison between our serial and parallel implementations}
+		\label{perf}
+	\end{figure}
 	\pagebreak
 	
 	\section{Appendix A: Installation}
