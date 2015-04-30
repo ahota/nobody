@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage[latin1]{inputenc}
 \usepackage{amsmath}
 \usepackage{xcolor}
@@ -113,8 +113,10 @@
 		
 		\subsection{Running the simulation}
 		For the serial version, run \texttt{./src/simulator/nbody\_cpu}.
-		The parallel version can be executed by running \texttt{./src/simulator/nbody\_cuda}.
-		
+		The parallel version can be executed by running \texttt{./src/simulator/nbody\_cuda}. The parallel version's usage is as follows:
+		\\\\	
+		./nbody\_cuda -b [NUMBER OF BODIES] -s [NUMBER OF TIMESTEPS] -t [DELTA T]
+		\\\\
 		The parallel version provides an \texttt{nbd} file that can be fed into a script as input to make it ready for visualization. This can be done by running \texttt{python scale\_for\_vis.py <filename>}, where filename is the name of the file made by running the simulation. This script creates a simulation.csv file that has to be copied to \texttt{./ui/data/} for the web server to pick up. The python web server starts and serves at \texttt{localhost:5000} by running \texttt{python run.py} in \texttt{./src/ui/}. From now on, any web browser can view the simulation on http://localhost:5000.
 		
 	\section{Appendix B: Header file}
