@@ -42,17 +42,17 @@
 A well known example of parallelization using the GPU is matrix multiplication. The serial version of this operation has a time complexity of $O(n^3)$, however with GPU parallelization, in general we can gain a time complexity of $O(N)$ assuming that we don't have GPU core limitations. 
 	
 	\section{Evaluation}
-	We tested our implementations on a machine with four Xeon CPUs and an Nvidia Quadro FX3800 GPU with 192 cores. 
+	We tested our implementations on a machine with an Intel Core i7-3770k CPU and an Nvidia GeForce GT 640 GPU with 384 cores. 
 	
 	For evaluation, the runtime of the serial and parallel implementations are compared. The values used for the matrix sizes in this comparison were 64, 128, 256, 512, 1024 and 2048. The test script used for generating the random matrices and running the two versions on them can be found at \texttt{./src/sgemm/test.sh}. The results are shown in Figure \ref{perf}.
 	\begin{figure}
 		\centering
-		\begin{subfigure}[b]{0.45\textwidth}
+		\begin{subfigure}[t]{0.45\textwidth}
 			\includegraphics[width=\textwidth]{sgemm_cuda.png}
 			\caption{Performance results for our parallel CUDA implementation}
 			\label{nbody_cuda}
 		\end{subfigure}
-		\begin{subfigure}[b]{0.45\textwidth}
+		\begin{subfigure}[t]{0.45\textwidth}
 			\includegraphics[width=\textwidth]{sgemm_cpu.png}
 			\caption{Performance results for our serial implementation}
 			\label{nbody_cpu}
