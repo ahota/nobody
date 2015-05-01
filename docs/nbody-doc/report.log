@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  30 APR 2015 19:12
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  30 APR 2015 20:41
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -355,27 +355,27 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
 <scr.png, id=16, 1371.1225pt x 770.88pt>
 File: scr.png Graphic file (type png)
  <use scr.png>
-Package pdftex.def Info: scr.png used on input line 79.
+Package pdftex.def Info: scr.png used on input line 80.
 (pdftex.def)             Requested size: 411.33992pt x 231.26578pt.
 
 <nbody_cuda.png, id=18, 578.16pt x 347.04657pt>
 File: nbody_cuda.png Graphic file (type png)
  <use nbody_cuda.png>
-Package pdftex.def Info: nbody_cuda.png used on input line 91.
+Package pdftex.def Info: nbody_cuda.png used on input line 92.
 (pdftex.def)             Requested size: 236.35544pt x 141.87166pt.
 
 <nbody_cpu.png, id=19, 578.16pt x 347.04657pt>
 File: nbody_cpu.png Graphic file (type png)
  <use nbody_cpu.png>
-Package pdftex.def Info: nbody_cpu.png used on input line 96.
+Package pdftex.def Info: nbody_cpu.png used on input line 97.
 (pdftex.def)             Requested size: 236.35544pt x 141.87166pt.
  [2 <./scr.png> <./nbody_cuda.png> <./nbody_cpu.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 115--121
+Underfull \hbox (badness 10000) in paragraph at lines 116--122
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 115--121
+Underfull \hbox (badness 10000) in paragraph at lines 116--122
 
  []
 
@@ -386,7 +386,7 @@ File: lstlang1.sty 2014/03/04 1.5c listings language file
 File: lstmisc.sty 2014/03/04 1.5c (Carsten Heinz)
 )
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <9> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 148.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 149.
  [3]
 [4] [5] [6] [7] [8] [9] [10] [11] (./report.aux) ) 
 Here is how much of TeX's memory you used:
@@ -412,7 +412,7 @@ e1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type
 1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/
 public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/p
 ublic/amsfonts/cm/cmtt9.pfb>
-Output written on report.pdf (11 pages, 487563 bytes).
+Output written on report.pdf (11 pages, 486956 bytes).
 PDF statistics:
  101 PDF objects out of 1000 (max. 8388607)
  69 compressed objects within 1 object stream
