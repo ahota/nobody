@@ -2,40 +2,40 @@
 	<head>
 		<title>3D NBody simulation</title>
 		<style>
-			body { margin: 0; }
+			body {
+                margin: 0;
+                font-size: 12px;
+                font-family: helvetica, arial, serif;
+            }
 			canvas { width: 100%; height: 100% }
-			#map
-			{
-				position: absolute;
-				width: 100%;
-				height: 100%;
-			}
 		</style>
 		<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
 		<script src="./lib/OrbitControls.js"></script>
+		<script src='./lib/Projector.js'></script>
 		<script src="./lib/papaparse.min.js"></script>
         <script src='./lib/tween.min.js'></script>
+
         <script id="vertexShader" type="x-shader/x-vertex">
             uniform vec3 viewVector;
             uniform float c;
             uniform float p;
             varying float intensity;
-            void main() 
+            void main()
             {
                 vec3 vNormal = normalize( normalMatrix * normal );
                 vec3 vNormel = normalize( normalMatrix * viewVector );
                 intensity = pow( c - dot(vNormal, vNormel), p );
-                
+
                 gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
             }
         </script>
 
         <!-- fragment shader a.k.a. pixel shader -->
-        <script id="fragmentShader" type="x-shader/x-vertex"> 
+        <script id="fragmentShader" type="x-shader/x-vertex">
             uniform vec3 glowColor;
             varying float intensity;
-            void main() 
+            void main()
             {
                 vec3 glow = glowColor * intensity;
                 gl_FragColor = vec4( glow, 0.5 );
@@ -58,14 +58,16 @@
             configs.camera_speed = 0.05;
             configs.color = 0x00ff00;
 
-            $(document).ready(function(){
-				var controls;
-				var camera;
-                var camera_angle = 45;
-                var far = 300;
-				var scene;
-				var renderer;
+			var controls;
+			var camera;
+			var camera_angle = 45;
+			var far = 300;
+			var scene;
+			var renderer;
+			var raycaster;
+			var mouse;
 
+            $(document).ready(function(){
                 Papa.parse(configs.filename, {
                     download: true,
                     dynamicTyping: true,
@@ -79,6 +81,12 @@
 
 				function init()
 				{
+					raycaster = new THREE.Raycaster();
+					mouse = new THREE.Vector2();
+					document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+					document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+					window.addEventListener( 'resize', onWindowResize, false );
+
 					renderer = new THREE.WebGLRenderer();
 				    renderer.setSize(window.innerWidth, window.innerHeight);
 					renderer.setClearColor( 0x000000, 1);
@@ -95,24 +103,24 @@
                     var texture = new THREE.ImageUtils.loadTexture( '/images/glow.png' );
                     var geometry = new THREE.SphereGeometry(configs.radius, 32, 32);
 
-                    var customMaterial = new THREE.ShaderMaterial( 
-                    {
-                        uniforms: 
-                        { 
-                            "c":   { type: "f", value: 0.0 },
-                            "p":   { type: "f", value: 60.0 },
-                            glowColor: { type: "c", value: new THREE.Color(configs.color) },
-                            viewVector: { type: "v3", value: camera.position }
-                        },
-                        vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-                        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-                        side: THREE.BackSide,
-                        blending: THREE.AdditiveBlending,
-                        transparent: true
-                    });
-
                     for (var i = 0; i < configs.n_bodies; i++)
                     {
+						var customMaterial = new THREE.ShaderMaterial(
+	                    {
+	                        uniforms:
+	                        {
+	                            "c":   { type: "f", value: 0.0 },
+	                            "p":   { type: "f", value: 60.0 },
+	                            glowColor: { type: "c", value: new THREE.Color(configs.color) },
+	                            viewVector: { type: "v3", value: camera.position }
+	                        },
+	                        vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+	                        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+	                        side: THREE.BackSide,
+	                        blending: THREE.AdditiveBlending,
+	                        transparent: true
+	                    });
+
                         var sphere = new THREE.Mesh(geometry, customMaterial);
                         sphere.position.x += data[i][0];
                         sphere.position.x += data[i][1];
@@ -128,7 +136,7 @@
 					var gridHelper = new THREE.GridHelper( size, step );
 					gridHelper.setColors(new THREE.Color(0x333333), new THREE.Color(0x333333));
 					scene.add( gridHelper );
-                    
+
     				renderer.render(scene, camera);
 
                     timestep = 0;
@@ -153,13 +161,64 @@
                             objects[i].position.z = data[configs.n_bodies * timestep + i][2];
                         }
                     }
-                    
+
                     if (autopilot)
                     {
                         camera.position.set(far * Math.cos(camera_angle * Math.PI / 180.0), far * Math.sin(camera_angle * Math.PI / 180.0), far * Math.sin(camera_angle * Math.PI / 180.0));
                         camera_angle = (camera_angle + configs.camera_speed) % 360;
                     }
                 }
+
+				function onWindowResize() {
+
+					camera.aspect = window.innerWidth / window.innerHeight;
+					camera.updateProjectionMatrix();
+
+					renderer.setSize( window.innerWidth, window.innerHeight );
+
+				}
+
+				function onDocumentTouchStart( event ) {
+
+					event.preventDefault();
+
+					event.clientX = event.touches[0].clientX;
+					event.clientY = event.touches[0].clientY;
+					onDocumentMouseDown( event );
+
+				}
+
+				function onDocumentMouseDown( event ) {
+
+					event.preventDefault();
+
+					mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+					mouse.y = - ( event.clientY / renderer.domElement.height ) * 2 + 1;
+
+					raycaster.setFromCamera( mouse, camera );
+
+					var intersects = raycaster.intersectObjects( objects );
+
+					if ( intersects.length > 0 )
+					{
+						intersects[ 0 ].object.material.uniforms.glowColor.value.setHex( Math.random() * 0xffffff );
+
+						var particle = new THREE.Sprite( particleMaterial );
+						particle.position.copy( intersects[ 0 ].point );
+						particle.scale.x = particle.scale.y = 16;
+						scene.add( particle );
+
+					}
+
+					/*
+					// Parse all the faces
+					for ( var i in intersects ) {
+
+						intersects[ i ].face.material[ 0 ].color.setHex( Math.random() * 0xffffff | 0x80000000 );
+
+					}
+					*/
+				}
 
 				function render(timestep)
 				{
@@ -171,8 +230,8 @@
                     var key = e.which;
                     if (key == 112) // p key
                     {
-                        pause = !pause;                   
-                    }                   
+                        pause = !pause;
+                    }
                     else if (key == 97) // a key
                     {
                         autopilot = !autopilot;
@@ -182,6 +241,11 @@
 		</script>
 	</head>
 	<body>
-        <div id="info" style="color: white; position: absolute; top: 10px; left: 10px; z-index: 10000;"></div>
+        <div style="color: white; position: absolute; top: 10px; left: 10px; z-index: 10000;">
+            a: Toggle autopilot mode
+			<br>
+            p: Pause/resume
+            <div id="info"></div>
+        </div>
 	</body>
 </html>
